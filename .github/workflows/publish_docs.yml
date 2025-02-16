@@ -49,7 +49,7 @@ jobs:
       run: rebar3 as doc ex_doc
 
     - name: Commit files
-      if: github.repository == 'atomvm/atomvm_packbeam'
+      # if: github.repository == 'atomvm/atomvm_packbeam'
       working-directory: ./docs
       run: |
         git checkout gh-pages
@@ -59,14 +59,16 @@ jobs:
         git add .
         git commit -m "Update Documentation"
     - name: Push changes
-      if: github.repository == 'atomvm/atomvm_packbeam'
+      # if: github.repository == 'atomvm/atomvm_packbeam'
       working-directory: ./docs
       run: |
         eval `ssh-agent -t 60 -s`
-        echo "${{ secrets.PUBLISH_KEY }}" | ssh-add -
+        #echo "${{ secrets.PUBLISH_KEY }}" | ssh-add -
+        echo "${{ secrets.SSH_DEPLOY_KEY }}" | ssh-add -
         mkdir -p ~/.ssh/
         ssh-keyscan github.com >> ~/.ssh/known_hosts
-        git remote add live_pages "git@github.com:atomvm/atomvm_www.git"
+        #git remote add live_pages "git@github.com:atomvm/atomvm_www.git"
+        git remote add live_pages "git@github.com:UncleGrumpy/atomvm_www.git"
         git fetch live_pages
         git push --set-upstream live_pages gh-pages
 
