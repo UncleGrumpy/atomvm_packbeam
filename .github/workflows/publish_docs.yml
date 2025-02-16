@@ -47,10 +47,12 @@ jobs:
         PATH="/tmp/rebar3:${PATH}" make doc
 
     - name: Commit files
-      if: github.repository == 'atomvm/atomvm_packbeam'
+      # if: github.repository == 'atomvm/atomvm_packbeam'
       run: |
         git branch --show-current
         git status
+        # git checkout gh-pages
+        git branch --show-current
         git config --local user.email "atomvm-doc-bot@object.stream"
         git config --local user.name "AtomVM Doc Bot"
         git status
@@ -58,13 +60,15 @@ jobs:
         git commit -m "Update Documentation ${{ github.ref_name }}"
 
     - name: Push changes
-      if: github.repository == 'atomvm/atomvm_packbeam'
+      # if: github.repository == 'atomvm/atomvm_packbeam'
       run: |
         eval `ssh-agent -t 60 -s`
-        echo "${{ secrets.PUBLISH_KEY }}" | ssh-add -
+        # echo "${{ secrets.PUBLISH_KEY }}" | ssh-add -
+        echo "${{ secrets.SSH_DEPLOY_KEY }}" | ssh-add -
         mkdir -p ~/.ssh/
         ssh-keyscan github.com >> ~/.ssh/known_hosts
-        git remote add live_pages "git@github.com:atomvm/atomvm_packbeam.git"
+        # git remote add live_pages "git@github.com:atomvm/atomvm_packbeam.git"
+        git remote add live_pages "git@github.com:UncleGrumpy/atomvm_packbeam.git"
         git fetch live_pages
         git diff --quiet live_pages/gh-pages || echo "Going to push"
         git diff --quiet live_pages/gh-pages || git push --set-upstream live_pages/gh-pages updates
