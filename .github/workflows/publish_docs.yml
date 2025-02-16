@@ -25,12 +25,16 @@ jobs:
       run: |
         sudo apt install -y make git
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
+      with:
+        repository: ${{ vars.GITHUB_REPOSITORY }}
+        fetch-depth: 0
 
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
       id: checkout-production
       with:
-        repository: atomvm/atomvm_packbeam
+        # repository: atomvm/atomvm_packbeam
+        repository: ${{ vars.GITHUB_REPOSITORY }}
         ref: gh-pages
         path: ./docs
 
@@ -46,27 +50,31 @@ jobs:
         ./bootstrap
 
     - name: "Build Docs"
-      run: PATH="/tmp/rebar3:${PATH}" make doc
+      run: |
+        # git checkout gh-pages
+        PATH="/tmp/rebar3:${PATH}" make doc
 
     - name: Commit files
-      if: github.repository == 'atomvm/atomvm_packbeam'
+      # if: github.repository == 'atomvm/atomvm_packbeam'
       working-directory: ./docs
       run: |
-        git checkout gh-pages
+        # git checkout gh-pages
         git branch --show-current
         git config --local user.email "atomvm-doc-bot@object.stream"
         git config --local user.name "AtomVM Doc Bot"
         git add .
         git commit -m "Update Documentation"
     - name: Push changes
-      if: github.repository == 'atomvm/atomvm_packbeam'
+      # if: github.repository == 'atomvm/atomvm_packbeam'
       working-directory: ./docs
       run: |
         eval `ssh-agent -t 60 -s`
-        echo "${{ secrets.PUBLISH_KEY }}" | ssh-add -
+        # echo "${{ secrets.PUBLISH_KEY }}" | ssh-add -
+        echo "${{ secrets.SSH_DEPLOY_KEY }}" | ssh-add -
         mkdir -p ~/.ssh/
         ssh-keyscan github.com >> ~/.ssh/known_hosts
-        git remote add live_pages "git@github.com:atomvm/atomvm_www.git"
+        #git remote add live_pages "git@github.com:atomvm/atomvm_www.git"
+        git remote add live_pages "git@github.com:UncleGrumpy/atomvm_www.git"
         git fetch live_pages
         git push --set-upstream live_pages gh-pages
 
