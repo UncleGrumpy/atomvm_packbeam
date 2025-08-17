@@ -77,6 +77,5 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Deploy to GitHub Pages
-        if: ${{ github.repository == 'atomvm/atomvm_packbeam' }}
         id: deployment
         uses: actions/deploy-pages@v4
