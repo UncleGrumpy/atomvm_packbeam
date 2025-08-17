@@ -81,6 +81,5 @@ jobs:
           ref: gh-pages
 
       - name: Deploy to GitHub Pages
-        if: ${{ github.repository == 'atomvm/atomvm_packbeam' }}
         id: deployment
         uses: actions/deploy-pages@v4
