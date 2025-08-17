@@ -79,6 +79,5 @@ jobs:
         uses: actions/configure-pages@v5
 
       - name: Deploy to GitHub Pages
-        if: ${{ github.repository == 'atomvm/atomvm_packbeam' }}
         id: deployment
         uses: actions/deploy-pages@v4
