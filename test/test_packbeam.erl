@@ -20,6 +20,7 @@
 
 -include_lib("proper/include/proper.hrl").
 -include_lib("eunit/include/eunit.hrl").
+-include_lib("kernel/include/file.hrl").
 
 -define(BUILD_DIR, "_build/").
 -define(TEST_BEAM_DIR, "_build/test/lib/atomvm_packbeam/test/").
@@ -65,6 +66,52 @@ packbeam_create_simple_test() ->
     ?assert(is_beam(CFile)),
     ?assertNot(is_start(CFile)),
     ?assertNot(lists:member({start, 0}, get_exports(CFile))),
+
+    ?assertMatch(d, get_module(DFile)),
+    ?assertMatch("d.beam", get_module_name(DFile)),
+    ?assert(is_beam(DFile)),
+    ?assertNot(is_start(DFile)),
+    ?assertNot(lists:member({start, 0}, get_exports(DFile))),
+
+    ?assertNot(is_beam(TextFile)),
+    ?assertMatch("test/priv/test.txt", get_module_name(TextFile)),
+
+    ok.
+
+packbeam_delete_test() ->
+    OriginalAVM = dest_dir("packbeam_create_simple_test.avm"),
+    AVMFile = dest_dir("packbeam_delete_test.avm"),
+    ?assertMatch(
+        ok,
+        packbeam_api:delete(
+            AVMFile,
+            OriginalAVM,
+            ["c.beam"]
+        )
+    ),
+
+    ParsedFiles = packbeam_api:list(AVMFile),
+
+    ?assert(is_list(ParsedFiles)),
+    ?assertEqual(4, length(ParsedFiles)),
+    {ok, #file_info{size = OriginalSize}} = file:read_file_info(OriginalAVM),
+    {ok, #file_info{size = FinalSize}} = file:read_file_info(AVMFile),
+    ?assert(FinalSize < OriginalSize),
+
+    %erlang:error({files, ParsedFiles}),
+    [AFile, BFile, DFile, TextFile] = ParsedFiles,
+
+    ?assertMatch(a, get_module(AFile)),
+    ?assertMatch("a.beam", get_module_name(AFile)),
+    ?assert(is_beam(AFile)),
+    ?assert(is_start(AFile)),
+    ?assert(lists:member({start, 0}, get_exports(AFile))),
+
+    ?assertMatch(b, get_module(BFile)),
+    ?assertMatch("b.beam", get_module_name(BFile)),
+    ?assert(is_beam(BFile)),
+    ?assert(is_start(BFile)),
+    ?assert(lists:member({start, 0}, get_exports(BFile))),
 
     ?assertMatch(d, get_module(DFile)),
     ?assertMatch("d.beam", get_module_name(DFile)),
