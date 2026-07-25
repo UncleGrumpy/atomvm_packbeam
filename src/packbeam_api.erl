@@ -524,14 +524,20 @@ remove(Module, ParsedFiles) ->
 
 %% @private
 get_imports(ParsedFile) ->
-    Imports = proplists:get_value(imports, proplists:get_value(chunk_refs, ParsedFile)),
+    Chunks = proplists:get_value(chunk_refs, ParsedFile, []),
+    Imports =
+        case proplists:get_value(imports, Chunks, []) of
+            missing_chunk -> [];
+            Imports0 -> Imports0
+        end,
     lists:usort([M || {M, _F, _A} <- Imports]).
 
 %% @private
 get_atoms(ParsedFile) ->
+    Chunks = proplists:get_value(chunk_refs, ParsedFile, []),
     AtomsT = [
         Atom
-     || {_Index, Atom} <- proplists:get_value(atoms, proplists:get_value(chunk_refs, ParsedFile))
+     || {_Index, Atom} <- proplists:get_value(atoms, Chunks, [])
     ],
     AtomsFromLiterals = get_atom_literals(proplists:get_value(uncompressed_literals, ParsedFile)),
     lists:usort(AtomsT ++ AtomsFromLiterals).
