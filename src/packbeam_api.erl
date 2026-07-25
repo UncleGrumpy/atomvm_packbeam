@@ -345,7 +345,7 @@ is_beam(AVMElement) ->
 
 %% @private
 get_flags(AVMElement) ->
-    proplists:get_value(flags, AVMElement).
+    proplists:get_value(flags, AVMElement, 0).
 
 %% @private
 parse_files(InputPaths, Lib, StartModule, IncludeLines) ->
