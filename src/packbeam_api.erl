@@ -815,7 +815,10 @@ write_packbeam(OutputFilePath, ParsedFiles) ->
     PackedData =
         [<<?AVM_HEADER>> | [pack_data(ParsedFile) || ParsedFile <- ParsedFiles]] ++
             [create_header(0, 0, <<"end">>)],
-    file:write_file(OutputFilePath, PackedData).
+    case file:write_file(OutputFilePath, PackedData) of
+        ok -> ok;
+        {error, Reason} -> {error, {write_failed, OutputFilePath, Reason}}
+    end.
 
 %% @private
 pack_data(ParsedFile) ->
