@@ -588,7 +588,7 @@ get_parsed_file(Module, ParsedFiles) ->
         {value, V} ->
             V;
         false ->
-            exit({module_not_found, Module, ParsedFiles})
+            throw({module_not_found, Module, ParsedFiles})
     end.
 
 %% @private
