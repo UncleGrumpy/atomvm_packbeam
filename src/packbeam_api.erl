@@ -398,7 +398,7 @@ load_file(Path) ->
 prune(ParsedFiles, RootApplicationModule) ->
     case find_entrypoint(ParsedFiles) of
         false ->
-            throw("No input beam files contain start/0 entrypoint");
+            throw({no_start_module_found, ParsedFiles});
         {value, Entrypoint} ->
             BeamFiles = lists:filter(fun is_beam/1, ParsedFiles),
             Modules = closure(Entrypoint, BeamFiles, [get_element_module(Entrypoint)]),
