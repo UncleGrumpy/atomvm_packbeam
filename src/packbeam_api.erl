@@ -503,7 +503,10 @@ closure(Current, Candidates, Accum) ->
     CandidateModules = get_element_modules(Candidates),
     CurrentsImports = get_imports(Current),
     CurrentsAtoms = get_atoms(Current),
-    DepModules = intersection(CurrentsImports ++ CurrentsAtoms, CandidateModules) -- Accum,
+    CurrentsBehaviours = get_behaviours(Current),
+    DepModules =
+        intersection(CurrentsImports ++ CurrentsAtoms ++ CurrentsBehaviours, CandidateModules) --
+            Accum,
     lists:foldl(
         fun(DepModule, A) ->
             case lists:member(DepModule, A) of
@@ -535,6 +538,28 @@ get_atoms(ParsedFile) ->
     ],
     AtomsFromLiterals = get_atom_literals(proplists:get_value(uncompressed_literals, ParsedFile)),
     lists:usort(AtomsT ++ AtomsFromLiterals).
+
+%% @private
+get_behaviours(ParsedFile) ->
+    case proplists:get_value(attributes, proplists:get_value(chunk_refs, ParsedFile)) of
+        missing_chunk ->
+            [];
+        undefined ->
+            [];
+        Attributes ->
+            lists:foldl(
+                fun
+                    ({behaviour, Behaviours}, Acc) when is_list(Behaviours) ->
+                        Behaviours ++ Acc;
+                    ({behaviour, Behaviour}, Acc) when is_atom(Behaviour) ->
+                        [Behaviour | Acc];
+                    (_, Acc) ->
+                        Acc
+                end,
+                [],
+                Attributes
+            )
+    end.
 
 %% @private
 get_atom_literals(undefined) ->
@@ -614,7 +639,7 @@ parse_file(beam, _ModuleName, Lib, StartModule, Data, IncludeLines) ->
     {UncompressedChunks, UncompressedLiterals} = maybe_uncompress_literals(Chunks),
     FilteredChunks = filter_chunks(UncompressedChunks, IncludeLines),
     {ok, Binary} = beam_lib:build_module(FilteredChunks),
-    {ok, {Module, ChunkRefs}} = beam_lib:chunks(Data, [imports, exports, atoms]),
+    {ok, {Module, ChunkRefs}} = beam_lib:chunks(Data, [imports, exports, atoms, attributes]),
     Exports = proplists:get_value(exports, ChunkRefs),
     Flags =
         if
@@ -748,7 +773,9 @@ parse_beam(Data, _Tmp, in_data, _Pos, Accum) ->
         true ->
             StrippedData = strip_padding(Data),
             {ok, {Module, ChunkRefs}} = beam_lib:chunks(
-                StrippedData, [imports, exports, atoms, "LitT", "LitU"], [allow_missing_chunks]
+                StrippedData,
+                [imports, exports, atoms, attributes, "LitT", "LitU"],
+                [allow_missing_chunks]
             ),
             [
                 {module, Module},

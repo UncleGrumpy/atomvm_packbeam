@@ -645,6 +645,30 @@ packbeam_create_prune_supervisor_callback_from_avm_test() ->
 
     ok.
 
+packbeam_prune_behaviour_test() ->
+    %% Test that prune preserves a behaviour module (foo) when a callback
+    %% module (bar) declares it via -behaviour(foo).
+    AVMFile = dest_dir("packbeam_prune_behaviour_test.avm"),
+    ?assertMatch(
+        ok,
+        packbeam_api:create(
+            AVMFile,
+            [
+                test_beam_path("baz_start_mod.beam"),
+                test_beam_path("bar.beam"),
+                test_beam_path("foo.beam"),
+                test_beam_path("d.beam")
+            ],
+            #{prune => true}
+        )
+    ),
+    ParsedFiles = packbeam_api:list(AVMFile),
+    ?assert(length(ParsedFiles) =:= 3),
+    ?assert(parsed_file_contains_module(baz_start_mod, ParsedFiles)),
+    ?assert(parsed_file_contains_module(bar, ParsedFiles)),
+    ?assert(parsed_file_contains_module(foo, ParsedFiles)),
+    ok.
+
 file_exists(Path) ->
     filelib:is_file(Path).
 
